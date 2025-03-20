@@ -25,4 +25,11 @@ CREATE TABLE Inventory_Fact (
 );
 
 
+select salesid,fulldate,inventoryid,salesamount,quantity
+from sales_fact s  join date_dimension d 
+on s.dateid=d.dateid join inventory_fact f
+on f.dateid=d.dateid
+
+
+
 
