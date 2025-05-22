@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Dimensional-Modeling-Practiical-guide
 
 
@@ -175,7 +174,3 @@ For questions or comments, please reach out to muhamedfahmy7474@gmail.com.
 
 This updated `README.md` file provides a clear description of each dimensional modeling schema and their purpose.
 
-
-=======
-# Dimensional-Modeling-Practiical-guide
->>>>>>> origin/main
