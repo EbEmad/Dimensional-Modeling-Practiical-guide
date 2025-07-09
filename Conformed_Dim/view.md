@@ -1,3 +1,32 @@
+### Shared Dimension: Dim_Customer
+
+| Customer_ID | Customer_Name |
+|-------------|---------------|
+| 101         | John Smith    |
+
+###  Fact Table: Fact_Sales
+
+| Sale_ID | Customer_ID | Product_ID | Date_ID  | Amount |
+|---------|-------------|------------|----------|--------|
+| 1       | 101         | 555        | 20230701 | 50.00  |
+
+
+###  Fact Table: Fact_Support_Tickets
+
+| Ticket_ID | Customer_ID | Product_ID | Date_ID  | Issue   |
+|-----------|-------------|------------|----------|---------|
+| 9001      | 101         | 555        | 20230703 | Damaged |
+
+
+###  Query Result: Sales with Support Tickets (CustomerID 101 - John Smith)
+
+| Sale_ID | Ticket_ID | Sale_Date   | Sale_Amount | Support_Issue | Customer_Name | Product_Name |
+|---------|-----------|-------------|-------------|---------------|---------------|--------------|
+| 1       | 9001      | 2023-07-01  | 50.00       | Damaged       | John Smith    | Laptop X     |
+ 
+ 
+ 
+ 
                                     +------------------+
                                     |  Dim_Customer    |
                                     +------------------+
