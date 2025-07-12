@@ -1,3 +1,8 @@
+  | SalesID  |OrderNumber| ProductID | CustomerID | SalesAmount | SalesDate |
+|------------|----------|------------|------------|-------------|-----------|
+| 1          | 123      | 5445       | 9009 | 900          |       '2024-08-17'    |
+         
+                            
                                 +------------------+
                                 |  Dim_Customer    |
                                 +------------------+
@@ -7,6 +12,7 @@
                                 |  Fact Table  |
                                 | Sales_Fact   |
                                 +-------------+
+                                | SalesID      | 
                                 | OrderNumber  |  <-- Degenerate Dimension
                                 | ProductID    |
                                 | CustomerID   |
