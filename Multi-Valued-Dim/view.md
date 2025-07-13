@@ -84,6 +84,32 @@ This design allows:
 - Scalable to any number of colors per student
 - Clean, normalized schema
 
+
+                          +------------------+
+                          |   Dim_Color      |
+                          |------------------|
+                          | ColorID (PK)     |
+                          | ColorName        |
+                          +------------------+
+                                   ▲
+                                   |
+                                   |
+                        +------------------------+
+                        |  Bridge_StudentColor   |
+                        |------------------------|
+                        | StudentID (PK)(FK)     |
+                        | ColorID (PK)(FK)       |
+                        +------------------------+
+                                   ▲
+                                   |
+                          +------------------+
+                          |   Dim_Student    |
+                          |------------------|
+                          | StudentID (PK)   |
+                          | Name             |
+                          +------------------+
+
+
 ---
 
 ##  5. What is a Multi-Valued Dimension?
