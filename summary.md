@@ -1,6 +1,6 @@
-# 📊 Data Modeling – Course Summary [Lec 1]
+#  Data Modeling – Course Summary [Lec 1]
 
-## 📄 Description
+##  Description
 
 This course focuses on the **importance of data modeling** as a key step in the data pipeline, coming after data ingestion and storage, and before data is served to end users.
 
@@ -8,7 +8,7 @@ A **data model** organizes and standardizes data into a structured format to gui
 
 ---
 
-## 🎯 Why Data Modeling Matters
+##  Why Data Modeling Matters
 
 - Ensures **data reflects business rules and goals**
 - Enables **clear communication** between stakeholders (engineers, analysts, executives)
@@ -18,7 +18,7 @@ A **data model** organizes and standardizes data into a structured format to gui
 
 ---
 
-## 🧱 Levels of Data Modeling
+##  Levels of Data Modeling
 
 1. **Conceptual Model** – High-level overview of business entities  
 2. **Logical Model** – Detailed structure with relationships and rules  
@@ -38,7 +38,7 @@ A **data model** organizes and standardizes data into a structured format to gui
 
 ---
 
-## 🧠 Key Takeaways
+##  Key Takeaways
 
 - Always begin by understanding the **business context**
 - Model data deliberately to serve specific **business domains** (e.g., marketing, finance)
@@ -48,16 +48,9 @@ A **data model** organizes and standardizes data into a structured format to gui
 
 ---
 
-## 📆 Course Structure Overview
 
-- **Week 1:** Traditional data modeling (conceptual, logical, physical, schemas)  
-- **Week 2:** Modeling & transforming data for machine learning  
-- **Week 3:** Deep dive into data transformation frameworks  
-- **Week 4:** Build an end-to-end data pipeline applying all concepts
 
----
-
-## ✅ Final Note
+## Final Note
 
 Data modeling is not just for large enterprises—**every business benefits** from well-structured data models. It’s a foundational skill for any serious data engineer.
 
