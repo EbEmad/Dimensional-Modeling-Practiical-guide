@@ -11,10 +11,13 @@ CREATE TABLE Sales_Fact (
     SalesAmount DECIMAL(10, 2),
     SalesDate DATE
 );
-INSERT INTO Sales_Fact (SalesID, OrderNumber,ProductID,CustomerID,SalesAmount,SalesDate)
-VALUES (1,123,5445,9009,900,'2024-08-17'),
-       (2,124,5446,9010,500,'2024-08-17'),
-        (3,124,5447,9011,900,'2024-08-17');
+INSERT INTO Sales_Fact (SalesID, OrderNumber, ProductID, CustomerID, SalesAmount, SalesDate)
+VALUES 
+    (1, 123, 5445, 9009, 900.00, '2024-08-17'),
+    (2, 123, 5445, 9010, 500.00, '2024-08-17'),
+    (3, 124, 5888, 9009, 250.00, '2024-08-18'),
+    (4, 125, 5445, 9011, 700.00, '2024-08-19'),
+    (5, 126, 5445, 9012, 1200.00, '2024-08-20');
 
 
 -- Query that uses the degenerate dimension
