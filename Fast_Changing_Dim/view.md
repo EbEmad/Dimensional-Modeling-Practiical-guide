@@ -84,36 +84,52 @@ This allows fast queries on current state and deep insights from historical data
 
 
 
-##  Visual Cheatsheet
+## Visual Model
 
+
+###  Solution 1: Mini-Dimension (Snapshot-Based)
 ```
-            +----------------------+
-            |    dim_customer      |
-            +----------------------+
-            | customer_id (PK)     |
-            | name                 |
-            | email                |
-            | behavior_id (FK)     |
-            +----------------------+
-                      |
-                      ▼
-      +-----------------------------+
-      |  dim_customer_behavior      |
-      +-----------------------------+
-      | behavior_id (PK)           |
-      | last_page_viewed           |
-      | interest_category          |
-      | session_count              |
-      +-----------------------------+
 
-      +-------------------------------------+
-      |      fact_customer_behavior         |
-      +-------------------------------------+
-      | event_id (PK)                      |
-      | customer_id (FK)                   |
-      | event_timestamp                    |
-      | page_viewed                        |
-      | interest_category                  |
-      | is_new_session                     |
-      +-------------------------------------+
+                        +----------------------+
+                        |    dim_customer      |   ← Main dimension
+                        +----------------------+
+                        | customer_id (PK)     |
+                        | name                 |
+                        | email                |
+                        | behavior_id (FK)     |   ← Link to mini-dimension
+                        +----------------------+
+                                    |
+                                    ▼
+                        +-----------------------------+
+                        |  dim_customer_behavior      |   ← Mini-dimension
+                        +-----------------------------+
+                        | behavior_id (PK)            |
+                        | last_page_viewed            |
+                        | interest_category           |
+                        | session_count               |
+                        +-----------------------------+
+```
+###  Solution 2: Fact Table (Event-Driven)
+```
+                                +----------------------+
+                                |    dim_customer      |   ← Main dimension
+                                +----------------------+
+                                | customer_id (PK)     |
+                                | name                 |
+                                | email                |
+                                | behavior_id (FK)     |   ← Link to fact table
+                                +----------------------+
+                                            |
+                                            ▼
+                        +-------------------------------------+
+                        |      fact_customer_behavior         |   ← Event-level fact table
+                        +-------------------------------------+
+                        | event_id (PK)                       |
+                        | customer_id (FK)                    |
+                        | event_timestamp                     |
+                        | page_viewed                         |
+                        | interest_category                   |
+                        | is_new_session                      |
+                        +-------------------------------------+
+
 ```
