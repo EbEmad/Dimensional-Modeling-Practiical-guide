@@ -1,4 +1,4 @@
-#  Understanding Multi-Valued Dimensions (MVD) in Data Warehousing
+#  Multi-Valued Dimensions
 
 ##  1. What is a Multi-Valued Dimension?
 
@@ -56,7 +56,7 @@ Now, one student is related to **multiple dimension values** → **Multi-Valued 
 
 ## 4. The Solution: Use a Bridge Table
 
-Break the many-to-many relationship using a **Bridge Table** (aka Helper Table).
+Break the many-to-many relationship using a **Bridge Table** .
 
 ### 1. Student Table
 | StudentID | Name  |
@@ -109,39 +109,4 @@ This design allows:
                           | Name             |
                           +------------------+
 
-
----
-
-##  5. What is a Multi-Valued Dimension?
-
-> A **Multi-Valued Dimension** occurs when **a single fact** is related to **multiple values** in a dimension table.
-
-We solve this using a **Bridge Table**.
-
----
-
-##  6. Real-World Examples of MVD
-
-| Fact (event)                  | Multi-valued dimension         |
-|------------------------------|--------------------------------|
-| A person watching a movie    | Movie has many genres          |
-| A student enrolled in courses| Student has many courses       |
-| A product sold with tags     | Product has many tags          |
-| A patient with conditions    | Patient has many diagnoses     |
-
----
-
-##  Summary
-
-| Design Option       | Scalable | Easy to Query | Recommended |
-|---------------------|----------|---------------|-------------|
-| Bridge Table        |  Yes   | Yes        |  Yes      |
-| Comma-Separated List|  No    |  No         |  No       |
-| Flattened Columns   |  No    |  No         | No       |
-
----
-
-##  Final Tip
-
-Any time your fact is related to multiple dimension values → use a **Bridge Table** to maintain clean schema and query flexibility.
 
