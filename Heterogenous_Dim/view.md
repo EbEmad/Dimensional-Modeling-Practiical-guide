@@ -1,5 +1,4 @@
-#  Heterogeneous Dimension – Explained with Real Example
-
+#  Heterogeneous Dimension 
 ##  What is a Heterogeneous Dimension?
 
 A **Heterogeneous Dimension** is a **single dimension table** that stores data for **multiple entity types** that play a similar role in a fact table. 
