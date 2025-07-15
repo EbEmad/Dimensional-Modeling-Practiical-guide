@@ -1,126 +1,153 @@
-# Geographic Sales Data Model
 
-##  Dimension Tables
+## Explanation
 
-### Dim_Country
+### What Is a Snowflake Schema?
+
+A **Snowflake Schema** is a type of data warehouse schema that uses **normalized dimension tables**. This means that hierarchical data (like country → state → city) is **split into multiple related tables** instead of one denormalized table. It resembles a snowflake in structure due to branching relationships.
+
+---
+
+
+
+#  Examples
+
+##  Schema Overview
+
+### Dimensional Tables:
+- `Dim_Country`: Stores country-level information.
+- `Dim_State`: Stores state-level information and links to `Dim_Country`.
+- `Dim_City`: Stores city-level information and links to `Dim_State`.
+- `Dim_Date`: Stores date-level information (used for time-based analysis).
+
+### Fact Table:
+- `Fact_Sales`: Stores actual sales data and references the `Dim_City` and `Dim_Date` tables.
+
+---
+
+
+## 1. Dimension Tables
+
+### `Dim_Country`
+
 | CountryID | CountryName |
 |-----------|-------------|
 | 1         | USA         |
 
-### Dim_State
+---
+
+### `Dim_State`
+
 | StateID | StateName | CountryID |
 |---------|-----------|-----------|
 | 10      | Texas     | 1         |
 
-### Dim_City
+---
+
+### `Dim_City`
+
 | CityID | CityName | StateID |
 |--------|----------|---------|
 | 100    | Dallas   | 10      |
 | 101    | Austin   | 10      |
 
-##  Fact Table: Fact_Sales
-| SaleID | CityID | DateID     | Amount |
-|--------|--------|------------|--------|
-| 1      | 100    | 2024-07-01 | 300.00 |
-| 2      | 101    | 2024-07-02 | 450.00 |
+---
 
-###  Query Results: Sales by Geography
+### `Dim_Date`
 
-| SaleID | CountryName | StateName | CityName | DateID     | Amount |
+| DateID  | FullDate   | Day | Month | Quarter | Year |
+|---------|------------|-----|-------|---------|------|
+| 20240701| 2024-07-01 | 1   | 7     | Q3      | 2024 |
+| 20240702| 2024-07-02 | 2   | 7     | Q3      | 2024 |
+
+---
+
+## 2. Fact Table
+
+### `Fact_Sales`
+
+| SaleID | CityID | DateID   | Amount |
+|--------|--------|----------|--------|
+| 1      | 100    | 20240701 | 300.00 |
+| 2      | 101    | 20240702 | 450.00 |
+
+---
+
+## 3. Query Output Example
+
+| SaleID | CountryName | StateName | CityName | FullDate   | Amount |
 |--------|-------------|-----------|----------|------------|--------|
 | 1      | USA         | Texas     | Dallas   | 2024-07-01 | 300.00 |
 | 2      | USA         | Texas     | Austin   | 2024-07-02 | 450.00 |
 
+---
 
-                                                +---------------------+
-                                                |    Dim_Country      |
-                                                +---------------------+
-                                                | CountryID (PK)      |
-                                                | CountryName         |
-                                                +---------------------+
-                                                            ▲
-                                                            |
-                                                            |
-                                                +---------------------+
-                                                |     Dim_State       |
-                                                +---------------------+
-                                                | StateID (PK)        |
-                                                | StateName           |
-                                                | CountryID (FK)      |
-                                                +---------------------+
-                                                            ▲
-                                                            |
-                                                            |
-                                                +---------------------+
-                                                |     Dim_City        |
-                                                +---------------------+
-                                                | CityID (PK)         |
-                                                | CityName            |
-                                                | StateID (FK)        |
-                                                +---------------------+
-                                                            ▲
-                                                            |
-                                                            |
-                                                +---------------------+
-                                                |     Fact_Sales      |
-                                                +---------------------+
-                                                | SaleID (PK)         |
-                                                | CityID (FK)         |
-                                                | DateID              |
-                                                | Amount              |
-                                                +---------------------+
-
+# Visual Model
+                              +---------------------+
+                              |     Dim_Country     |
+                              +---------------------+
+                              | CountryID (PK)      |
+                              | CountryName         |
+                              +---------------------+
+                                        ▲
+                                        |
+                              +---------------------+
+                              |      Dim_State      |
+                              +---------------------+
+                              | StateID (PK)        |
+                              | StateName           |
+                              | CountryID (FK)      |
+                              +---------------------+
+                                        ▲
+                                        |
+                              +---------------------+
+                              |      Dim_City       |
+                              +---------------------+
+                              | CityID (PK)         |
+                              | CityName            |
+                              | StateID (FK)        |
+                              +---------------------+
+                                        ▲
+                                        |
+            +------------------+       +-------------------+
+            |   Dim_Date       |       |    Fact_Sales     |
+            +------------------+       +-------------------+
+            | DateID (PK)      |<------| DateID (FK)       |
+            | FullDate         |       | CityID (FK)       |
+            | Day, Month, etc. |       | Amount            |
+            +------------------+       | SaleID (PK)       |
+                                        +-------------------+
 
 
-# Snowflake Schema Explained
+##  Key Benefits
 
-## Core Concept
-- **Normalized dimensions** split into multiple tables
-- **Hierarchical relationships** (Country → State → City)
-- **Resembles snowflake shape** with branching connections
+| Benefit                | Description                                                                 |
+|------------------------|-----------------------------------------------------------------------------|
+| **Storage Efficiency** | Removes redundant data by splitting hierarchies into separate tables        |
+| **Data Integrity**     | Foreign key constraints ensure consistency across levels                     |
+| **Query Flexibility**  | Enables analysis at multiple levels (e.g., by country, state, or city)       |
+| **Maintainability**    | Easier to update individual dimensions without affecting others              |
 
-##  Key Components
+---
 
-### 1. Dimension Tables
-- **Dim_Country** (Top-level)
-  - `CountryID` (PK)
-  - `CountryName`
+##  Trade-offs
 
-- **Dim_State** (Mid-level) 
-  - `StateID` (PK)
-  - `StateName`
-  - `CountryID` (FK → Dim_Country)
+| Advantage              | Trade-off                       |
+|------------------------|----------------------------------|
+| Reduces redundancy     | Requires more joins              |
+| Clean structure        | Slightly complex query writing   |
+| Easier updates         | May lead to slower performance   |
 
-- **Dim_City** (Leaf-level)
-  - `CityID` (PK)
-  - `CityName`
-  - `StateID` (FK → Dim_State)
+---
 
-### 2. Fact Table
-- **Fact_Sales**
-  - `SaleID` (PK)
-  - `CityID` (FK → Dim_City)
-  - `DateID`
-  - `Amount`
+##  When to Use a Snowflake Schema
 
-##  Why This Works
+Use a Snowflake Schema when:
+- Your dimensions have clear hierarchical levels (e.g., region → country → state → city).
+- You want to **reduce data redundancy**.
+- You prioritize **data quality and integrity** over query speed.
+- You're building a **scalable data warehouse** that will grow in complexity over time.
 
-1. **Data Integrity**  
-   - Clear PK/FK relationships prevent orphan records
-   - Ensures valid geographic hierarchies
+---
 
-2. **Storage Efficiency**  
-   - No duplicate country/state names
-   - Smaller dimension tables
 
-3. **Query Flexibility**  
-   - Analyze at any level: country → state → city
-   - Easy to add new geographic levels
 
-##  Considerations
-
-| Advantage | Trade-off |
-|-----------|-----------|
-| Clean hierarchies | More complex queries |
-| Reduced storage | Additional joins |
-| Easy maintenance | Slightly slower performance |
