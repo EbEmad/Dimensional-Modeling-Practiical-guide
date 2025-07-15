@@ -40,7 +40,7 @@ They are typically:
 
 ---
 
-## 🛠 How to Design a Junk Dimension
+##  How to Design a Junk Dimension
 
 1. Identify small, unrelated fields in the fact table.
 2. Combine their possible values into a single `Dim_Junk` table.
@@ -114,76 +114,76 @@ Avoid junk dimensions for:
 
 
                             +------------------+
-                            |   Dim_Product     |
+                            |   Dim_Product    |
                             +------------------+
                                     ▲
                                     |
                             +------------------+
-                            |     Dim_Date      |
+                            |     Dim_Date     |
                             +------------------+
                                     ▲
                                     |
                             +------------------+
-                            |  Dim_Customer     |
+                            |  Dim_Customer    |
                             +------------------+
                                     ▲
                                     |
                             +------------------+
-                            |   Dim_Store       |
+                            |   Dim_Store      |
                             +------------------+
                                     ▲
                                     |
                             +------------------+
-                            | Dim_Employee      |
+                            | Dim_Employee     |
                             +------------------+
                                     ▲
                                     |
-                             +--------------------------------------------+
-                             |                 Fact_Sales                |
-                             |--------------------------------------------|
-                             | Sale_ID (PK)                               |
-                             | Product_ID (FK) → Dim_Product              |
-                             | Date_ID (FK) → Dim_Date                    |
-                             | Customer_ID (FK) → Dim_Customer            |
-                             | Store_ID (FK) → Dim_Store                  |
-                             | Employee_ID (FK) → Dim_Employee            |
-                             | Amount                                     |
-                             | Is_Promo                                   |
-                             | Is_First_Order                             |
-                             | Order_Type                                 |
-                             +--------------------------------------------+
+                +--------------------------------------------+
+                |                 Fact_Sales                 |
+                |--------------------------------------------|
+                | Sale_ID (PK)                               |
+                | Product_ID (FK) → Dim_Product              |
+                | Date_ID (FK) → Dim_Date                    |
+                | Customer_ID (FK) → Dim_Customer            |
+                | Store_ID (FK) → Dim_Store                  |
+                | Employee_ID (FK) → Dim_Employee            |
+                | Amount                                     |
+                | Is_Promo                                   |
+                | Is_First_Order                             |
+                | Order_Type                                 |
+                +--------------------------------------------+
 
 
 # With Junk
 
 
 
-                            +------------------+
-                            |   Dim_Product     |
-                            +------------------+
-                                    ▲
-                                    |
-                            +------------------+
-                            |     Dim_Date      |
-                            +------------------+
-                                    ▲
-                                    |
-                            +------------------+
-                            |    Dim_Junk       |
-                            |------------------|
-                            | Junk_ID (PK)      |
-                            | Is_Promo          |
-                            | Is_First_Order    |
-                            | Order_Type        |
-                            +------------------+
-                                    ▲
-                                    |
-                             +------------------+
-                             |   Fact_Sales      |
-                             |------------------|
-                             | Sale_ID (PK)      |
-                             | Product_ID (FK)   |
-                             | Date_ID (FK)      |
-                             | Amount            |
-                             | Junk_ID (FK)      |
-                             +------------------+
+                                +------------------+
+                                |   Dim_Product     |
+                                +------------------+
+                                        ▲
+                                        |
+                                +------------------+
+                                |     Dim_Date      |
+                                +------------------+
+                                        ▲
+                                        |
+                                +------------------+
+                                |    Dim_Junk       |
+                                |------------------|
+                                | Junk_ID (PK)      |
+                                | Is_Promo          |
+                                | Is_First_Order    |
+                                | Order_Type        |
+                                +------------------+
+                                        ▲
+                                        |
+                        +---------------------------------+
+                        |   Fact_Sales                    |
+                        |-------------------------------- |
+                        | Sale_ID (PK)                    |
+                        | Product_ID (FK) → Dim_Product   |
+                        | Date_ID (FK)   → Dim_Date       |
+                        | Amount                          |
+                        | Junk_ID (FK)                    |
+                        +---------------------------------+
