@@ -27,6 +27,30 @@ This approach:
 ---
 
 
+
+
+# Sales Data Analysis
+
+## Database Tables
+
+### Date_Dimension Table
+
+| DateID | FullDate   | Day | Month | Year | Weekday   |
+|--------|------------|-----|-------|------|-----------|
+| 1      | 2024-07-01 | 1   | 7     | 2024 | Monday    |
+| 2      | 2024-07-02 | 2   | 7     | 2024 | Tuesday   |
+| 3      | 2024-07-03 | 3   | 7     | 2024 | Wednesday |
+| 4      | 2024-07-04 | 4   | 7     | 2024 | Thursday  |
+
+### Sales_Fact Table
+
+| SalesID | OrderDateID | ShipDateID | DeliveryDateID | SalesAmount |
+|---------|-------------|------------|----------------|-------------|
+| 101     | 1           | 2          | 4              | 250.00      |
+| 102     | 2           | 3          | 4              | 400.00      |
+
+## Visual Model
+
                           +---------------------+
                           |    Date_Dimension   |
                           +---------------------+
@@ -49,28 +73,6 @@ This approach:
               | DeliveryDateID --> Role: Delivery Date      |
               | SalesAmount                                 |
               +---------------------------------------------+
-
-
-
-# Sales Data Analysis
-
-## Database Tables
-
-### Date_Dimension Table
-
-| DateID | FullDate   | Day | Month | Year | Weekday   |
-|--------|------------|-----|-------|------|-----------|
-| 1      | 2024-07-01 | 1   | 7     | 2024 | Monday    |
-| 2      | 2024-07-02 | 2   | 7     | 2024 | Tuesday   |
-| 3      | 2024-07-03 | 3   | 7     | 2024 | Wednesday |
-| 4      | 2024-07-04 | 4   | 7     | 2024 | Thursday  |
-
-### Sales_Fact Table
-
-| SalesID | OrderDateID | ShipDateID | DeliveryDateID | SalesAmount |
-|---------|-------------|------------|----------------|-------------|
-| 101     | 1           | 2          | 4              | 250.00      |
-| 102     | 2           | 3          | 4              | 400.00      |
 
 ## SQL Query
 
