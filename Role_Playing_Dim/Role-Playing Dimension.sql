@@ -22,3 +22,29 @@ CREATE TABLE Sales_Fact (
     FOREIGN KEY (DeliveryDateID) REFERENCES Date_Dimension(DateID)
 );
 
+-- Insert data into Date_Dimension
+INSERT INTO Date_Dimension (DateID, FullDate, Day, Month, Year, Weekday)
+VALUES 
+(1, '2024-07-01', 1, 7, 2024, 'Monday'),
+(2, '2024-07-02', 2, 7, 2024, 'Tuesday'),
+(3, '2024-07-03', 3, 7, 2024, 'Wednesday'),
+(4, '2024-07-04', 4, 7, 2024, 'Thursday');
+
+-- Insert data into Sales_Fact
+INSERT INTO Sales_Fact (SalesID, OrderDateID, ShipDateID, DeliveryDateID, SalesAmount)
+VALUES 
+(101, 1, 2, 4, 250.00),
+(102, 2, 3, 4, 400.00);
+
+
+SELECT 
+  SF.SalesID,
+  OD.FullDate AS Order_Date,
+  SD.FullDate AS Ship_Date,
+  DD.FullDate AS Delivery_Date,
+  SF.SalesAmount
+FROM 
+  Sales_Fact SF
+JOIN Date_Dimension OD ON SF.OrderDateID = OD.DateID
+JOIN Date_Dimension SD ON SF.ShipDateID = SD.DateID
+JOIN Date_Dimension DD ON SF.DeliveryDateID = DD.DateID;
