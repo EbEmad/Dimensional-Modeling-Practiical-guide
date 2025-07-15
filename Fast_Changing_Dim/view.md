@@ -1,5 +1,5 @@
 
-#  Fast Changing Dimensions (FCD) – Professional Guide
+#  Fast Changing Dimensions 
 
 
 ##  Problem Statement

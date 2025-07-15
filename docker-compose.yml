@@ -7,4 +7,4 @@ services:
       POSTGRES_PASSWORD: root
       POSTGRES_DB: test_db
     ports:
-      - "5433:5432"
+      - "5432:5432"
