@@ -1,4 +1,4 @@
-# Slowly Changing Dimensions (SCD) Explained
+# Slowly Changing Dimensions
 
 Slowly Changing Dimensions (SCD) are used in data warehousing to manage and track changes in dimension attributes over time.
 
@@ -90,6 +90,29 @@ John moves to Alexandria:
  Separates current and historical data.
 
 ---
+# Visual Model
+                                                +----------------------+
+                                                |      DimCustomer     |
+                                                +----------------------+
+                                                | CustomerID           |
+                                                | Name                 |
+                                                | Address              |
+                                                +----------------------+
+                                                        |
+                 -----------------------------------------------------------------------------------------------
+                |                           |                         |                                        |
+              Type 1                      Type 2                    Type 3                                   Type 4
+            (Overwrite)                (Add new row)          (Store old in column)                    (Separate History)
+                |                           |                         |                                        | 
+        +----------------+            +--------------+        +------------------------+             +----------------------+      
+        | CustomerID     |            | CustomerID   |        | CustomerID             |             | CustomerID           |
+        | Name           |            | Name         |        | Name                   |             | Name                 |
+        | Address        |            | Address      |        | CurrentAddress         |             | Address              |
+        +----------------+            | StartDate    |        | PreviousAddress        |             | StartDate            |
+                                      | EndDate      |        +------------------------+             | EndDate              |
+                                      | IsCurrent    |                                               +----------------------+
+                                      +--------------+
+
 
 ##  Summary Table
 
