@@ -1,29 +1,19 @@
+#  Snowflake Dimension
 
 ## Explanation
 
-### What Is a Snowflake Schema?
+### What Is a Snowflake Dimension?
 
-A **Snowflake Schema** is a type of data warehouse schema that uses **normalized dimension tables**. This means that hierarchical data (like country → state → city) is **split into multiple related tables** instead of one denormalized table. It resembles a snowflake in structure due to branching relationships.
+A **Snowflake Dimension** is a type of dimension modeling technique in data warehousing where the dimension data is **normalized** into multiple related tables, rather than being stored in a single denormalized table.
 
----
+It represents **hierarchical relationships** explicitly by breaking down the dimension into levels — for example:  
+`Country → State → City`.
 
-
-
-#  Examples
-
-##  Schema Overview
-
-### Dimensional Tables:
-- `Dim_Country`: Stores country-level information.
-- `Dim_State`: Stores state-level information and links to `Dim_Country`.
-- `Dim_City`: Stores city-level information and links to `Dim_State`.
-- `Dim_Date`: Stores date-level information (used for time-based analysis).
-
-### Fact Table:
-- `Fact_Sales`: Stores actual sales data and references the `Dim_City` and `Dim_Date` tables.
+This design reduces data redundancy and improves data integrity, but at the cost of more complex joins.
 
 ---
 
+#  Example: Snowflake Dimension in a Sales Model
 
 ## 1. Dimension Tables
 
@@ -82,40 +72,41 @@ A **Snowflake Schema** is a type of data warehouse schema that uses **normalized
 ---
 
 # Visual Model
-                              +---------------------+
-                              |     Dim_Country     |
-                              +---------------------+
-                              | CountryID (PK)      |
-                              | CountryName         |
-                              +---------------------+
-                                        ▲
-                                        |
-                              +---------------------+
-                              |      Dim_State      |
-                              +---------------------+
-                              | StateID (PK)        |
-                              | StateName           |
-                              | CountryID (FK)      |
-                              +---------------------+
-                                        ▲
-                                        |
-                              +---------------------+
-                              |      Dim_City       |
-                              +---------------------+
-                              | CityID (PK)         |
-                              | CityName            |
-                              | StateID (FK)        |
-                              +---------------------+
-                                        ▲
-                                        |
-            +------------------+       +-------------------+
-            |   Dim_Date       |       |    Fact_Sales     |
-            +------------------+       +-------------------+
-            | DateID (PK)      |<------| DateID (FK)       |
-            | FullDate         |       | CityID (FK)       |
-            | Day, Month, etc. |       | Amount            |
-            +------------------+       | SaleID (PK)       |
-                                        +-------------------+
+                                                    +---------------------+
+                                                    |     Dim_Country     |
+                                                    +---------------------+
+                                                    | CountryID (PK)      |
+                                                    | CountryName         |
+                                                    +---------------------+
+                                                                ▲
+                                                                |
+                                                    +---------------------+
+                                                    |      Dim_State      |
+                                                    +---------------------+
+                                                    | StateID (PK)        |
+                                                    | StateName           |
+                                                    | CountryID (FK)      |
+                                                    +---------------------+
+                                                                ▲
+                                                                |
+                                                    +---------------------+
+                                                    |      Dim_City       |
+                                                    +---------------------+
+                                                    | CityID (PK)         |
+                                                    | CityName            |
+                                                    | StateID (FK)        |
+                                                    +---------------------+
+                                                                ▲
+                                                                |
+                                    +------------------+       +-------------------+
+                                    |   Dim_Date       |       |    Fact_Sales     |
+                                    +------------------+       +-------------------+
+                                    | DateID (PK)      |<------| DateID (FK)       |
+                                    | FullDate         |       | CityID (FK)       |
+                                    | Day, Month, etc. |       | Amount            |
+                                    +------------------+       | SaleID (PK)       |
+                                                               +-------------------+
+
 
 
 ##  Key Benefits
@@ -146,8 +137,6 @@ Use a Snowflake Schema when:
 - You want to **reduce data redundancy**.
 - You prioritize **data quality and integrity** over query speed.
 - You're building a **scalable data warehouse** that will grow in complexity over time.
-
----
 
 
 
