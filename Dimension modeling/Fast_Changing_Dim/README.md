@@ -117,7 +117,7 @@ This allows fast queries on current state and deep insights from historical data
                                 | customer_id (PK)     |
                                 | name                 |
                                 | email                |
-                                | behavior_id (FK)     |   ← Link to fact table
+                                | event_id (FK)     |   ← Link to fact table
                                 +----------------------+
                                             |
                                             ▼
