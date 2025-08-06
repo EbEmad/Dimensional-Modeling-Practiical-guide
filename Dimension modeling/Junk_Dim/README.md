@@ -4,7 +4,17 @@
 
 A **Junk Dimension** is a single dimension table that stores **multiple low-cardinality, unrelated attributes** that don’t belong in their own dimension.
 
-Think of it as a **“junk drawer”** for data: instead of creating a new drawer (dimension table) for every little thing, we put all the small stuff in one place.
+**Low cardinality** means the attribute has **few distinct values**, like `Yes/No`, `Online/In-store`, or `Active/Inactive`.
+
+**Imagine** you’re tracking online orders, and each order has small details like:
+
+- Whether it’s a promotional sale (`Is_Promo`)
+- If it’s the customer’s first purchase (`Is_First_Order`)
+- How the order was placed (`Order_Type`: Online or In-store)
+
+Individually, these attributes don’t deserve their own dimension tables—they’re simple, low-cardinality, and unrelated.
+
+A **Junk Dimension** groups these types of fields into a single table, helping reduce clutter in your data model and keeping the fact table streamlined.
 
 ---
 
