@@ -1,44 +1,62 @@
+# Degenerate Dimensions
 
-## Degenerate Dimension – Summary
+A **Degenerate Dimension (DD)** is a dimension attribute that is stored directly in the **Fact Table** instead of having its own separate dimension table.
 
-- A **Degenerate Dimension (DD)** is a **dimension attribute** that:
-  - Exists **within the fact table**
-  - Has **no separate dimension table**
-- It is used for **reporting**, **filtering**, or **grouping**
-- Typical examples: **Order numbers**, **Invoice IDs**, **Transaction numbers**
-- These values lack additional descriptive data, so there's **no need to normalize** them into a dimension table
+## What makes it "Degenerate"?
+In traditional dimensional modeling, every descriptive attribute belongs in a dimension table. However, some attributes (like Order Numbers or Invoice Numbers) are unique to the transaction and don't have any additional descriptive data (like a name, color, or category).
 
+Instead of creating a "Dimension Table" with just one column, we "collapse" it into the fact table.
 
-###  Fact Table: Sales (with Degenerate Dimension - `OrderNumber`)
+---
 
-| SalesID | OrderNumber | ProductID | CustomerID | SalesAmount | SalesDate   |
-|---------|-------------|-----------|------------|-------------|-------------|
-| 1       | 123         | 5445      | 9009       | 900.00      | 2024-08-17  |
-| 2       | 123         | 5445      | 9010       | 500.00      | 2024-08-17  |
-| 3       | 124         | 5888      | 9009       | 250.00      | 2024-08-18  |
-| 4       | 125         | 5445      | 9011       | 700.00      | 2024-08-19  |
-| 5       | 126         | 5445      | 9012       | 1200.00     | 2024-08-20  |
-         
-                            
-                                +------------------+
-                                |  Dim_Customer    |
-                                +------------------+
-                                        ▲
-                                        |
-                                +-------------+
-                                |  Fact Table  |
-                                | Sales_Fact   |
-                                +-------------+
-                                | SalesID      | 
-                                | OrderNumber  |  <-- Degenerate Dimension
-                                | ProductID    |
-                                | CustomerID   |
-                                | SalesAmount  |
-                                | SalesDate    |
-                                +-------------+
-                                        ▲
-                                        |
-                                +----------------+
-                                |  Dim_Product   |
-                                +----------------+
+## Visualizing Degenerate Dimensions
+
+In the diagram below, `Order_Number` is a Degenerate Dimension. It has no foreign key to an external table because it lives inside the fact.
+
+```mermaid
+erDiagram
+    DIM-CUSTOMER ||--o{ FACT-SALES : "bought_by"
+    DIM-PRODUCT ||--o{ FACT-SALES : "contains"
+    DIM-DATE ||--o{ FACT-SALES : "happened_on"
+
+    FACT-SALES {
+        int sale_id PK
+        string order_number "Degenerate Dimension"
+        int customer_key FK
+        int product_key FK
+        int date_key FK
+        decimal amount
+    }
+    DIM-CUSTOMER {
+        int customer_key PK
+        string name
+        string email
+    }
+    DIM-PRODUCT {
+        int product_key PK
+        string product_name
+        string category
+    }
+    DIM-DATE {
+        int date_key PK
+        date full_date
+    }
+```
+
+---
+
+## When to Use Degenerate Dimensions?
+
+You should use a Degenerate Dimension when an attribute:
+- **Has no descriptive attributes**: There is no "Order Category" or "Order Color" to store.
+- **Is high cardinality**: Almost every row or small group of rows has a unique value.
+- **Is used for grouping**: You often want to see "Total amount per Order Number".
+- **Identifies the transaction**: It acts as the natural key for the business process (e.g., Ticket ID, Bill of Lading, Policy Number).
+
+---
+
+## Key Benefits
+1. **Performance**: Eliminates a JOIN between the fact and a large, skinny dimension table.
+2. **Simplified Schema**: Reduces the number of tables in your star schema.
+3. **Traceability**: Allows analysts to trace a row in the data warehouse back to the original source system transaction.
 
