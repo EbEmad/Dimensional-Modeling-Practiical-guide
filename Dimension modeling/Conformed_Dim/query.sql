@@ -1,81 +1,102 @@
--- Active: 1751631291387@@127.0.0.1@5433@postgres
--- Active: 1751444695567@@localhost@5432
---  Conformed Dimension: Date
-
+-- Conformed Dimension: Dim_Date
 CREATE TABLE Dim_Date (
-    Date_ID INT PRIMARY KEY,
-    FullDate DATE,
-    Day INT,
-    Month INT,
+    Date_Key INT PRIMARY KEY, -- Format: YYYYMMDD
+    Full_Date DATE,
+    Day_Of_Week VARCHAR(10),
+    Month_Name VARCHAR(10),
+    Quarter INT,
     Year INT
 );
 
--- Conformed Dimension: Customer
-CREATE TABLE Dim_Customer (
-    Customer_ID INT PRIMARY KEY,
-    Customer_Name VARCHAR(100)
-);
-
--- Conformed Dimension: Product
+-- Conformed Dimension: Dim_Product
 CREATE TABLE Dim_Product (
-    Product_ID INT PRIMARY KEY,
-    Product_Name VARCHAR(100)
+    Product_Key INT PRIMARY KEY,
+    SKU VARCHAR(20),
+    Product_Name VARCHAR(100),
+    Category VARCHAR(50)
 );
 
--- Fact Table: Sales
+-- Conformed Dimension: Dim_Store
+CREATE TABLE Dim_Store (
+    Store_Key INT PRIMARY KEY,
+    Store_Name VARCHAR(100),
+    City VARCHAR(50),
+    Region VARCHAR(50)
+);
+
+-- Fact Table 1: Sales (Business Process: Retail Sales)
 CREATE TABLE Fact_Sales (
-    Sale_ID INT PRIMARY KEY,
-    Customer_ID INT,
-    Product_ID INT,
-    Date_ID INT,
-    Amount DECIMAL(10, 2),
-    FOREIGN KEY (Customer_ID) REFERENCES Dim_Customer(Customer_ID),
-    FOREIGN KEY (Product_ID) REFERENCES Dim_Product(Product_ID),
-    FOREIGN KEY (Date_ID) REFERENCES Dim_Date(Date_ID)
+    Sale_ID SERIAL PRIMARY KEY,
+    Date_Key INT REFERENCES Dim_Date(Date_Key),
+    Product_Key INT REFERENCES Dim_Product(Product_Key),
+    Store_Key INT REFERENCES Dim_Store(Store_Key),
+    Quantity_Sold INT,
+    Sales_Amount DECIMAL(12, 2)
 );
 
--- Fact Table: Support Tickets
-CREATE TABLE Fact_Support_Tickets (
-    Ticket_ID INT PRIMARY KEY,
-    Customer_ID INT,
-    Product_ID INT,
-    Date_ID INT,
-    Issue VARCHAR(100),
-    FOREIGN KEY (Customer_ID) REFERENCES Dim_Customer(Customer_ID),
-    FOREIGN KEY (Product_ID) REFERENCES Dim_Product(Product_ID),
-    FOREIGN KEY (Date_ID) REFERENCES Dim_Date(Date_ID)
+-- Fact Table 2: Inventory (Business Process: Warehouse Management)
+-- Note: This shares Date, Product, and Store with Fact_Sales
+CREATE TABLE Fact_Inventory (
+    Inventory_ID SERIAL PRIMARY KEY,
+    Date_Key INT REFERENCES Dim_Date(Date_Key),
+    Product_Key INT REFERENCES Dim_Product(Product_Key),
+    Store_Key INT REFERENCES Dim_Store(Store_Key),
+    Quantity_On_Hand INT
 );
 
+-- 1. Insert Data into Conformed Dimensions
+INSERT INTO Dim_Product (Product_Key, SKU, Product_Name, Category) VALUES
+(1, 'LPT-X1', 'Laptop X1', 'Electronics'),
+(2, 'PHN-Y2', 'Phone Y2', 'Electronics');
 
+INSERT INTO Dim_Date (Date_Key, Full_Date, Day_Of_Week, Month_Name, Quarter, Year) VALUES
+(20230701, '2023-07-01', 'Saturday', 'July', 3, 2023),
+(20230702, '2023-07-02', 'Sunday', 'July', 3, 2023);
 
--- Insert into shared dimensions
-INSERT INTO Dim_Customer VALUES (101, 'John Smith');
-INSERT INTO Dim_Product VALUES (555, 'Laptop X');
-INSERT INTO Dim_Date VALUES (20230701, '2023-07-01', 1, 7, 2023);
-INSERT INTO Dim_Date VALUES (20230703, '2023-07-03', 3, 7, 2023);
+INSERT INTO Dim_Store (Store_Key, Store_Name, City, Region) VALUES
+(10, 'Main Street Store', 'New York', 'North');
 
--- Insert into fact tables
-INSERT INTO Fact_Sales VALUES (1, 101, 555, 20230701, 50.00);
-INSERT INTO Fact_Support_Tickets VALUES (9001, 101, 555, 20230703, 'Damaged');
+-- 2. Insert Data into Fact Tables
+INSERT INTO Fact_Sales (Date_Key, Product_Key, Store_Key, Quantity_Sold, Sales_Amount) VALUES
+(20230701, 1, 10, 5, 5000.00),
+(20230701, 2, 10, 10, 8000.00);
 
+INSERT INTO Fact_Inventory (Date_Key, Product_Key, Store_Key, Quantity_On_Hand) VALUES
+(20230701, 1, 10, 2), -- Sold 5 but only 2 left? Warning!
+(20230701, 2, 10, 50);
 
-
-
-
-
--- get the result
-
+-- 3. DRILL-ACROSS QUERY
+-- Comparing Sales vs Inventory using Conformed Dimensions
+-- We use a Common Table Expression (CTE) to aggregate facts before joining
+WITH Sales_Agg AS (
+    SELECT 
+        Product_Key, 
+        Date_Key, 
+        SUM(Quantity_Sold) as Total_Sold
+    FROM Fact_Sales
+    GROUP BY Product_Key, Date_Key
+),
+Inventory_Agg AS (
+    SELECT 
+        Product_Key, 
+        Date_Key, 
+        SUM(Quantity_On_Hand) as Stock_Level
+    FROM Fact_Inventory
+    GROUP BY Product_Key, Date_Key
+)
 SELECT 
-    s.Sale_ID,
-    t.Ticket_ID,
-    d.FullDate AS Sale_Date,
-    s.Amount AS Sale_Amount,
-    t.Issue AS Support_Issue,
-    c.Customer_Name,
-    p.Product_Name
-FROM Fact_Sales s
-JOIN Dim_Date d ON s.Date_ID = d.Date_ID
-JOIN Fact_Support_Tickets t ON t.Customer_ID = s.Customer_ID AND t.Product_ID = s.Product_ID
-JOIN Dim_Customer c ON s.Customer_ID = c.Customer_ID
-JOIN Dim_Product p ON s.Product_ID = p.Product_ID
-WHERE s.Customer_ID = 101;
+    p.Product_Name,
+    d.Full_Date,
+    COALESCE(s.Total_Sold, 0) as Sold,
+    COALESCE(i.Stock_Level, 0) as On_Hand,
+    CASE 
+        WHEN i.Stock_Level < s.Total_Sold THEN 'CRITICAL: Low Stock'
+        WHEN i.Stock_Level < s.Total_Sold * 2 THEN 'Warning: Restock Soon'
+        ELSE 'Healthy'
+    END as Inventory_Status
+FROM Dim_Product p
+JOIN Dim_Date d ON 1=1 -- Typical for cross-join reports or use specific dates
+LEFT JOIN Sales_Agg s ON p.Product_Key = s.Product_Key AND d.Date_Key = s.Date_Key
+LEFT JOIN Inventory_Agg i ON p.Product_Key = i.Product_Key AND d.Date_Key = i.Date_Key
+WHERE s.Total_Sold IS NOT NULL OR i.Stock_Level IS NOT NULL
+ORDER BY d.Full_Date;
