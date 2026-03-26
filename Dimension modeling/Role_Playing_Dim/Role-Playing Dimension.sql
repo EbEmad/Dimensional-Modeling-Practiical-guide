@@ -1,50 +1,44 @@
---Role-Playing Dimension
-  --A Role-Playing Dimension is a single dimension that can play multiple roles in the fact table.
-
-CREATE TABLE Date_Dimension (
-    DateID INT PRIMARY KEY,
-    FullDate DATE,
-    Day INT,
-    Month INT,
+-- 1. Date Dimension (The "Actor")
+CREATE TABLE Dim_Date (
+    Date_Key INT PRIMARY KEY, -- YYYYMMDD
+    Full_Date DATE,
+    Day_Name VARCHAR(10),
+    Month_Name VARCHAR(10),
     Year INT,
-    Weekday VARCHAR(50)
+    Is_Holiday BOOLEAN
 );
 
--- Used in the fact table as different roles
-CREATE TABLE Sales_Fact (
-    SalesID INT PRIMARY KEY,
-    OrderDateID INT,
-    ShipDateID INT,
-    DeliveryDateID INT,
-    SalesAmount DECIMAL(10, 2),
-    FOREIGN KEY (OrderDateID) REFERENCES Date_Dimension(DateID),
-    FOREIGN KEY (ShipDateID) REFERENCES Date_Dimension(DateID),
-    FOREIGN KEY (DeliveryDateID) REFERENCES Date_Dimension(DateID)
+-- 2. Fact Table (The "Scene" where the actor plays different roles)
+CREATE TABLE Fact_Sales (
+    Sale_ID SERIAL PRIMARY KEY,
+    Product_Name VARCHAR(100),
+    Order_Date_Key INT REFERENCES Dim_Date(Date_Key), -- Role 1
+    Ship_Date_Key INT REFERENCES Dim_Date(Date_Key),  -- Role 2
+    Delivery_Date_Key INT REFERENCES Dim_Date(Date_Key), -- Role 3
+    Amount DECIMAL(12, 2)
 );
 
--- Insert data into Date_Dimension
-INSERT INTO Date_Dimension (DateID, FullDate, Day, Month, Year, Weekday)
-VALUES 
-(1, '2024-07-01', 1, 7, 2024, 'Monday'),
-(2, '2024-07-02', 2, 7, 2024, 'Tuesday'),
-(3, '2024-07-03', 3, 7, 2024, 'Wednesday'),
-(4, '2024-07-04', 4, 7, 2024, 'Thursday');
+-- 3. Insert Sample Data
+INSERT INTO Dim_Date VALUES 
+(20240701, '2024-07-01', 'Monday', 'July', 2024, FALSE),
+(20240703, '2024-07-03', 'Wednesday', 'July', 2024, FALSE),
+(20240705, '2024-07-05', 'Friday', 'July', 2024, FALSE);
 
--- Insert data into Sales_Fact
-INSERT INTO Sales_Fact (SalesID, OrderDateID, ShipDateID, DeliveryDateID, SalesAmount)
-VALUES 
-(101, 1, 2, 4, 250.00),
-(102, 2, 3, 4, 400.00);
+INSERT INTO Fact_Sales (Product_Name, Order_Date_Key, Ship_Date_Key, Delivery_Date_Key, Amount) VALUES 
+('Laptop X1', 20240701, 20240703, 20240705, 1500.00);
 
-
+-- 4. Querying multiple roles using Aliases
+-- We join ONLY ONE physical table (Dim_Date) multiple times
 SELECT 
-  SF.SalesID,
-  OD.FullDate AS Order_Date,
-  SD.FullDate AS Ship_Date,
-  DD.FullDate AS Delivery_Date,
-  SF.SalesAmount
-FROM 
-  Sales_Fact SF
-JOIN Date_Dimension OD ON SF.OrderDateID = OD.DateID
-JOIN Date_Dimension SD ON SF.ShipDateID = SD.DateID
-JOIN Date_Dimension DD ON SF.DeliveryDateID = DD.DateID;
+    f.Sale_ID,
+    f.Product_Name,
+    ord.Full_Date AS Order_Date,
+    shp.Full_Date AS Ship_Date,
+    del.Full_Date AS Delivery_Date,
+    -- Business Logic: Calculating Lead Time (in days)
+    (shp.Full_Date - ord.Full_Date) AS Days_to_Ship,
+    (del.Full_Date - shp.Full_Date) AS Days_in_Transit
+FROM Fact_Sales f
+JOIN Dim_Date ord ON f.Order_Date_Key = ord.Date_Key
+JOIN Dim_Date shp ON f.Ship_Date_Key = shp.Date_Key
+JOIN Dim_Date del ON f.Delivery_Date_Key = del.Date_Key;
