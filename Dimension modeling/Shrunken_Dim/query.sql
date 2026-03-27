@@ -1,83 +1,71 @@
--- 1. Full Store Dimension
-CREATE TABLE store_dim (
-    store_id INT PRIMARY KEY,
-    store_name VARCHAR(100),
-    city VARCHAR(100),
-    state VARCHAR(50),
-    region VARCHAR(50),
-    address VARCHAR(255),
-    manager_name VARCHAR(100),
-    store_type VARCHAR(50)
+-- 1. Full Base Dimension (Detailed Grain)
+CREATE TABLE Dim_Store (
+    Store_Key SERIAL PRIMARY KEY,
+    Store_Name VARCHAR(100),
+    City VARCHAR(100),
+    State VARCHAR(50),
+    Region VARCHAR(50),
+    Manager_Name VARCHAR(100)
 );
 
--- 2. Store Sales Fact Table (Detailed)
-CREATE TABLE store_sales_fact (
-    sale_id INT PRIMARY KEY,
-    store_id INT,
-    sale_date DATE,
-    product_id VARCHAR(20),
-    units_sold INT,
-    revenue DECIMAL(10,2),
-    FOREIGN KEY (store_id) REFERENCES store_dim(store_id)
+-- 2. Atomic Fact Table (Detailed Sales)
+CREATE TABLE Fact_Sales_Atomic (
+    Sale_ID SERIAL PRIMARY KEY,
+    Store_Key INT REFERENCES Dim_Store(Store_Key),
+    Sale_Date DATE,
+    Amount DECIMAL(12, 2)
 );
 
--- 3. Shrunken Store Dimension (Region-Level)
-CREATE TABLE store_region_dim AS
-SELECT DISTINCT region, state
-FROM store_dim;
-
--- 4. Regional Sales Monthly (Aggregated Summary)
-CREATE TABLE regional_sales_monthly (
-    region VARCHAR(50),
-    state VARCHAR(50),
-    month CHAR(7),
-    total_sales DECIMAL(12,2)
+-- 3. Shrunken Dimension (Rollup Grain)
+-- This can be a physical table for performance
+CREATE TABLE Dim_Store_Region (
+    State VARCHAR(50),
+    Region VARCHAR(50),
+    PRIMARY KEY (State, Region)
 );
 
--- Insert sample data into store_dim
-INSERT INTO store_dim (store_id, store_name, city, state, region, address, manager_name, store_type)
-VALUES
-(1001, 'Central Outlet', 'Boston', 'MA', 'East', '12 Main St', 'Alice Johnson', 'Mall'),
-(1002, 'Urban Depot', 'San Diego', 'CA', 'West', '45 Ocean Blvd', 'John Doe', 'Street');
+-- 4. Aggregated Fact Table (Monthly Regional Summary)
+CREATE TABLE Fact_Sales_Regional_Monthly (
+    State VARCHAR(50),
+    Region VARCHAR(50),
+    Month_Key CHAR(7), -- e.g., '2024-01'
+    Total_Amount DECIMAL(15, 2),
+    PRIMARY KEY (State, Region, Month_Key)
+);
 
--- Insert sample data into store_sales_fact
-INSERT INTO store_sales_fact (sale_id, store_id, sale_date, product_id, units_sold, revenue)
-VALUES
-(501, 1001, '2024-01-02', 'P123', 4, 120.00);
+-- 5. Populating Sample Data
+INSERT INTO Dim_Store (Store_Name, City, State, Region, Manager_Name) VALUES
+('Central Outlet', 'Boston', 'MA', 'East', 'Alice Johnson'),
+('North Hub', 'Cambridge', 'MA', 'East', 'Charlie Brown'),
+('Urban Depot', 'San Diego', 'CA', 'West', 'John Doe');
 
--- Insert sample data into regional_sales_monthly
-INSERT INTO regional_sales_monthly (region, state, month, total_sales)
-VALUES
-('East', 'MA', '2024-01', 52300.00),
-('West', 'CA', '2024-01', 39000.00);
+INSERT INTO Fact_Sales_Atomic (Store_Key, Sale_Date, Amount) VALUES
+(1, '2024-01-02', 1200.00),
+(2, '2024-01-03', 800.00),
+(3, '2024-01-02', 950.00);
 
+-- 6. Populating the Shrunken Dimension from the Base Table
+INSERT INTO Dim_Store_Region (State, Region)
+SELECT DISTINCT State, Region 
+FROM Dim_Store;
 
--- option1 without shrunken dimension
+-- 7. Populating the Aggregated Fact (ETL/Drill-Up Process)
+INSERT INTO Fact_Sales_Regional_Monthly (State, Region, Month_Key, Total_Amount)
 SELECT 
-    ssf.sale_id,
-    ssf.sale_date,
-    sd.store_name,
-    sd.city,
-    sd.state,
-    sd.region,
-    ssf.product_id,
-    ssf.units_sold,
-    ssf.revenue
-FROM 
-    store_sales_fact ssf
-JOIN 
-    store_dim sd ON ssf.store_id = sd.store_id;
+    d.State,
+    d.Region,
+    TO_CHAR(f.Sale_Date, 'YYYY-MM'),
+    SUM(f.Amount)
+FROM Fact_Sales_Atomic f
+JOIN Dim_Store d ON f.Store_Key = d.Store_Key
+GROUP BY d.State, d.Region, TO_CHAR(f.Sale_Date, 'YYYY-MM');
 
-
-
--- option2 with shrunken dimension
+-- 8. Querying the Shrunken Path (Efficient for Summaries)
 SELECT 
-    rsm.region,
-    rsm.state,
-    rsm.month,
-    rsm.total_sales
-FROM 
-    regional_sales_monthly rsm
-JOIN 
-    store_region_dim srd ON rsm.region = srd.region AND rsm.state = srd.state;
+    r.Region,
+    r.State,
+    f.Total_Amount
+FROM Fact_Sales_Regional_Monthly f
+JOIN Dim_Store_Region r ON f.State = r.State AND f.Region = r.Region
+WHERE f.Month_Key = '2024-01';
 

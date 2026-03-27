@@ -1,99 +1,76 @@
-#  Shrunken Rollup Dimension
+# Shrunken Rollup Dimensions
 
-##  What is a Shrunken Rollup Dimension?
+A **Shrunken Rollup Dimension** (or simply **Shrunken Dimension**) is a **subset** of a larger base dimension. It contains a subset of the rows and/or columns of the original dimension and is used to support **aggregated fact tables**.
 
-A **Shrunken Rollup Dimension** (or simply **Shrunken Dimension**) is a **subset of a larger dimension table**, designed for use with **aggregated or summarized fact tables**.
-
-It is often **physically smaller** (fewer columns/rows), providing **less granularity**, yet still maintaining a **conformed structure** with the original full dimension.
-
----
-
-##  Key Characteristics
-
-- Subset of **columns and/or rows** from a base dimension.
-- Used in **summary-level fact tables**.
-- Improves **query performance** and **simplifies joins**.
-- Maintains **conformed semantics** across the data model.
-- Can be **physical (table)** or **logical (view)**.
+## The Concept: Granularity Alignment
+In dimensional modeling, fact tables often exist at different levels of detail (grain). 
+- An **Atomic Fact** (e.g., individual sales) needs the **Full Dimension**.
+- An **Aggregated Fact** (e.g., monthly regional totals) needs a **Shrunken Dimension**.
 
 ---
 
-##  Example Scenario: Store Dimension
+## Visualizing the Shrunken Pattern
 
-###  Full Store Dimension
+The Shrunken Dimension is a "rollup" of the base dimension. It remains **conformed** because the attributes it *does* contain are identical in name and meaning to the base dimension.
 
-Used in detailed transactional reporting:
+```mermaid
+erDiagram
+    DIM_STORE ||--o{ FACT_SALES_ATOMIC : "at_store"
+    DIM_STORE_REGION ||--o{ FACT_SALES_REGIONAL_MONTHLY : "at_region"
 
-| StoreID | StoreName       | City       | State | Region | Address             | ManagerName   | StoreType |
-|---------|------------------|------------|-------|--------|----------------------|----------------|-----------|
-| 1001    | Central Outlet   | Boston     | MA    | East   | 12 Main St           | Alice Johnson  | Mall      |
-| 1002    | Urban Depot      | San Diego  | CA    | West   | 45 Ocean Blvd        | John Doe       | Street    |
-| ...     | ...              | ...        | ...   | ...    | ...                  | ...            | ...       |
+    DIM_STORE {
+        int store_key PK
+        string store_name
+        string city
+        string state
+        string region
+        string manager_name
+    }
 
-Used in a fact table like `Store_Sales_Fact`:
+    DIM_STORE_REGION {
+        string state PK
+        string region
+    }
 
-| SaleID | StoreID | Date       | ProductID | UnitsSold | Revenue |
-|--------|---------|------------|-----------|-----------|---------|
-| 501    | 1001    | 2024-01-02 | P123      | 4         | 120.00  |
+    FACT_SALES_ATOMIC {
+        int sale_id PK
+        int store_key FK
+        decimal amount
+    }
+
+    FACT_SALES_REGIONAL_MONTHLY {
+        string state FK
+        string region FK
+        string month_key
+        decimal total_amount
+    }
+```
 
 ---
 
-###  Shrunken Store Dimension
+## Key Benefits
 
-Used in regional or summary reporting:
-
-| Region | State |
-|--------|--------|
-| East   | MA     |
-| West   | CA     |
-| ...    | ...    |
-
-Used in an aggregated fact table like `Regional_Sales_Monthly`:
-
-| Region | State | Month     | TotalSales |
-|--------|-------|-----------|------------|
-| East   | MA    | 2024-01   | 52,300.00  |
-| West   | CA    | 2024-01   | 39,000.00  |
+| Benefit | Description |
+| :--- | :--- |
+| **Performance** | Smaller tables mean faster joins and smaller indexes. |
+| **Simplicity** | Aggregated reports don't need to join to massive detailed dimensions. |
+| **Consistency** | Since it's a subset of the base dimension, "Region" means the same thing in both. |
+| **Storage** | Reduces the footprint of summary-level data marts. |
 
 ---
-##  Visual Model
 
-                            +----------------------------+                      +-----------------------------+
-                            |     Full Store Dimension   |                      |   Shrunken Store Dimension  |
-                            +----------------------------+                      +-----------------------------+
-                            | StoreID                    |                      | Region                      |
-                            | StoreName                  |                      | State                       |
-                            | City                       |                      +-----------------------------+
-                            | State                      |
-                            | Region                     |                                 ▲
-                            | Address                    |                                 |
-                            | ManagerName                |                                 |
-                            | StoreType                  |                                 |
-                            +----------------------------+                                 |
-                                        ▲                                                  |
-                                        |                                                  |
-                                        ▼                                                  ▼
-                            +----------------------------+                      +-----------------------------+
-                            |      Store_Sales_Fact      |                      |   Regional_Sales_Monthly    |
-                            +----------------------------+                      +-----------------------------+
-                            | SaleID                     |                      | Region                      |
-                            | StoreID                    |                      | State                       |
-                            | Date                       |                      | Month                       |
-                            | ProductID                  |                      | TotalSales                  |
-                            | UnitsSold                  |                      +-----------------------------+
-                            | Revenue                    |
-                            +----------------------------+
+## Star Schema vs. Aggregation Path
 
+| Feature | Base Dimension | Shrunken Dimension |
+| :--- | :--- | :--- |
+| **Grain** | Atomic (e.g., Individual Store) | Rollup (e.g., State/Region) |
+| **Columns** | All attributes (Manager, Address, etc.) | Only grouping attributes. |
+| **Fact Table** | Transactional (Item level) | Aggregated (Monthly/Daily summary) |
 
-## When to Use a Shrunken Dimension?
+---
 
-Use shrunken dimensions when:
-
-- You need **high-level summaries** (e.g., by region or category).
-- Full detail isn’t necessary (e.g., StoreName, Manager, Address).
-- You want to **boost performance** for summary dashboards.
-- You want to maintain **semantic consistency** without using the full dimension.
-
-
-
-
+## Implementation Note
+Shrunken dimensions can be implemented as:
+1. **Physical Tables**: Best for performance in large-scale warehouses.
+2. **Database Views**: `SELECT DISTINCT region, state FROM dim_store`. Best for maintenance (logic is in one place).
+imension.
