@@ -1,135 +1,69 @@
+# Fast Changing Dimensions (FCD)
 
-#  Fast Changing Dimensions 
-
-
-##  Problem Statement
-
-Fast-changing attributes (e.g., browsing behavior, session data) change frequently and are not suitable for SCD Type 2 due to excessive row versions.
-
-### Example – E-commerce Customer Table
-
-| CustomerID | Name | Last_Page_Viewed | Interest_Category | Session_Count |
-|------------|------|------------------|-------------------|---------------|
-| 1          | Ali  | Home             | Electronics       | 3             |
-
-Attributes like `Last_Page_Viewed` and `Interest_Category` change frequently and don’t require full historical tracking.
+A **Fast Changing Dimension** occurs when certain attributes in a dimension table change much more frequently than others. Using standard **SCD Type 2** for these attributes would lead to massive **row bloat**, as every minor change (like a page view) would create a new version of the entire dimension record.
 
 ---
 
-##  Solution 1: Mini-Dimension
-
-Separate fast-changing attributes into a **mini-dimension**, referenced by a foreign key in the main dimension.
-
-### `dim_customer` (Core Dimension)
-
-| Column       | Type   | Description           |
-|--------------|--------|-----------------------|
-| customer_id  | INT PK | Unique customer ID    |
-| name         | STRING | Static attribute      |
-| email        | STRING | Static attribute      |
-| behavior_id  | INT FK | Refers to mini-dim ID |
-
-### `dim_customer_behavior` (Mini-Dimension)
-
-| Column            | Type   | Description              |
-|-------------------|--------|--------------------------|
-| behavior_id       | INT PK | Surrogate key            |
-| last_page_viewed  | STRING | Last visited page        |
-| interest_category | STRING | Current interest         |
-| session_count     | INT    | Number of sessions       |
-
- A new `behavior_id` is created only when behavior changes.
+## The Problem: Row Bloat
+Imagine a customer dimension where we track "Last Interest" or "Current Session ID". If a customer clicks 100 times a day, SCD Type 2 would create 100 rows per day for that one customer. This quickly becomes unmanageable.
 
 ---
 
-##  Solution 2: Fact Table
+## Visualizing the Solutions
 
-Track changes in a **fact table** as events, storing behavior with timestamps for detailed analysis.
+### Solution 1: The Mini-Dimension (Profile Snapshot)
+We break off the volatile attributes into a separate **Mini-Dimension**. The main dimension then points to this mini-dimension.
 
-### `fact_customer_behavior`
+```mermaid
+erDiagram
+    DIM_CUSTOMER ||--o{ DIM_BEHAVIOR_MINI : "has_current_profile (Mini-Dimension)"
+    FACT_SALES ||--o{ DIM_CUSTOMER : "purchased_by"
+    FACT_SALES ||--o{ DIM_BEHAVIOR_MINI : "customer_state_at_sale"
 
-| Column            | Type      | Description              |
-|-------------------|-----------|--------------------------|
-| event_id          | BIGINT PK | Unique event identifier  |
-| customer_id       | INT FK    | Reference to customer    |
-| event_timestamp   | DATETIME  | Timestamp of event       |
-| page_viewed       | STRING    | Page visited             |
-| interest_category | STRING    | New interest             |
-| is_new_session    | BOOLEAN   | Session flag             |
-
- Useful for real-time analytics and event-based models.
-
----
-
-##  Comparison
-
-| Aspect                | Mini-Dimension                   | Fact Table                          |
-|-----------------------|----------------------------------|-------------------------------------|
-| Storage Cost          | Lower                            | Higher                              |
-| Historical Tracking   | Limited to behavior snapshots    | Full event history                  |
-| Query Complexity      | Moderate                         | Higher                              |
-| Real-time Use Cases   |  Less suitable                 |  Ideal for streaming/analytics    |
-
----
-
-##  Hybrid Approach
-
-Use both:
-- **Mini-Dimension** for current behavior snapshot
-- **Fact Table** for full behavioral tracking
-
-This allows fast queries on current state and deep insights from historical data.
-
----
-
-
-
-## Visual Model
-
-
-###  Solution 1: Mini-Dimension (Snapshot-Based)
+    DIM_CUSTOMER {
+        int customer_key PK
+        string name
+        string email
+        int behavior_key FK
+    }
+    DIM_BEHAVIOR_MINI {
+        int behavior_key PK "Mini-Dimension"
+        string bracket_age
+        string interest_category
+        string loyalty_tier
+    }
 ```
 
-                        +----------------------+
-                        |    dim_customer      |   ← Main dimension
-                        +----------------------+
-                        | customer_id (PK)     |
-                        | name                 |
-                        | email                |
-                        | behavior_id (FK)     |   ← Link to mini-dimension
-                        +----------------------+
-                                    |
-                                    ▼
-                        +-----------------------------+
-                        |  dim_customer_behavior      |   ← Mini-dimension
-                        +-----------------------------+
-                        | behavior_id (PK)            |
-                        | last_page_viewed            |
-                        | interest_category           |
-                        | session_count               |
-                        +-----------------------------+
-```
-###  Solution 2: Fact Table (Event-Driven)
-```
-                                +----------------------+
-                                |    dim_customer      |   ← Main dimension
-                                +----------------------+
-                                | customer_id (PK)     |
-                                | name                 |
-                                | email                |
-                                | event_id (FK)     |   ← Link to fact table
-                                +----------------------+
-                                            |
-                                            ▼
-                        +-------------------------------------+
-                        |      fact_customer_behavior         |   ← Event-level fact table
-                        +-------------------------------------+
-                        | event_id (PK)                       |
-                        | customer_id (FK)                    |
-                        | event_timestamp                     |
-                        | page_viewed                         |
-                        | interest_category                   |
-                        | is_new_session                      |
-                        +-------------------------------------+
+### Solution 2: The Behavioral Fact Table (Event Stream)
+For extremely high-frequency changes (like raw clicks), we use an **Event-Level Fact Table** to track every specific change as a timestamped event.
 
+```mermaid
+erDiagram
+    DIM_CUSTOMER ||--o{ FACT_CUSTOMER_BEHAVIOR : "performs"
+    
+    FACT_CUSTOMER_BEHAVIOR {
+        int event_id PK
+        int customer_key FK
+        datetime event_time
+        string page_url
+        string action_type
+    }
 ```
+
+---
+
+## Comparison of Approaches
+
+| Feature | Mini-Dimension | Behavioral Fact Table |
+| :--- | :--- | :--- |
+| **Granularity** | Demographic/Behavioral Buckets. | Atomic events (Clicks, Views). |
+| **History** | Snapshots of "state". | Full audit trail of "actions". |
+| **Join Cost** | Very low (Direct FK). | Higher (Requires range/time joins). |
+| **Use Case** | Scoring, Tiers, Segments. | Path analysis, Attribution models. |
+
+---
+
+## Best Practices
+1. **Don't use SCD Type 2** for high-frequency attributes.
+2. **Bucket your values**: Instead of storing raw "Session Count", store "Session Range" (e.g., 1-5, 6-10) in the mini-dimension to reduce the number of unique rows.
+3. **Hybrid Model**: Use a Mini-Dimension for the current "Customer Profile" and a Fact Table for the historical "Event Stream".
