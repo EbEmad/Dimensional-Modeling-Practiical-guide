@@ -1,6 +1,6 @@
 CREATE TABLE Customer_DimensionSCD1 (
     CustomerID INT PRIMARY KEY,          -- Unique identifier for the customer
-    CustomerName VARCHAR(255),           -- Name of the customer
+    CustomerName VARCHAR(255),           
     City VARCHAR(255),                   -- Current city of the customer
     State VARCHAR(255),                  -- Current state of the customer
     Country VARCHAR(255)            -- Current country of the customer
@@ -53,7 +53,7 @@ CREATE TABLE Customer_DimensionSCD2 (
 -- Insert the new record with updated values
 INSERT INTO Customer_DimensionSCD2 (CustomerID, CustomerName, City, State, Country, StartDate, EndDate, IsCurrent)
 VALUES 
-(1, 'John Doe', 'New York', 'NY', 'USA', '2023-01-01', NULL, 'Y');
+(1, 'John Doe', 'New York', 'NY', 'USA', '2024-08-16', NULL, 'Y');
 
 -- Mark the old record as historical
 UPDATE Customer_DimensionSCD2
@@ -76,7 +76,7 @@ SELECT * FROM Customer_DimensionSCD2 WHERE CustomerID = 1;
 CREATE TABLE Customer_DimensionSCD3 (
     CustomerSurrogateID SERIAL PRIMARY KEY, -- Surrogate key
     CustomerID INT,                        -- Business key
-    CustomerName VARCHAR(255),             -- Name of the customer
+    CustomerName VARCHAR(255),             
     City VARCHAR(255),                     -- Current city of the customer
     State VARCHAR(255),                    -- Current state of the customer
     Country VARCHAR(255),                  -- Current country of the customer
@@ -110,7 +110,7 @@ SELECT * FROM Customer_DimensionSCD3 WHERE CustomerID = 1;
 CREATE TABLE Customer_DimensionSCD4 (
     CustomerSurrogateID SERIAL PRIMARY KEY, -- Surrogate key
     CustomerID INT,                        -- Business key
-    CustomerName VARCHAR(255),             -- Name of the customer
+    CustomerName VARCHAR(255),             
     City VARCHAR(255),                     -- Current city of the customer
     State VARCHAR(255),                    -- Current state of the customer
     Country VARCHAR(255)                   -- Current country of the customer
@@ -119,7 +119,7 @@ CREATE TABLE Customer_DimensionSCD4 (
 CREATE TABLE Customer_Historical_DimensionSCD4 (
     HistoricalID SERIAL PRIMARY KEY,       -- Unique identifier for historical records
     CustomerID INT,                        -- Business key
-    CustomerName VARCHAR(255),             -- Name of the customer
+    CustomerName VARCHAR(255),             
     City VARCHAR(255),                     -- Previous city
     State VARCHAR(255),                    -- Previous state
     Country VARCHAR(255),                  -- Previous country

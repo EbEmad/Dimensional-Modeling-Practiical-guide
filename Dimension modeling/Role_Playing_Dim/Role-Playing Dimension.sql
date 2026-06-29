@@ -7,6 +7,14 @@ CREATE TABLE Dim_Date (
     Year INT,
     Is_Holiday BOOLEAN
 );
+create table dim_date(
+    date_key int primary KEY,
+    full_date DATE,
+    day_name VARCHAR(10),
+    month_name VARCHAR(10),
+    year int,
+    is_holiday BOOLEAN,
+)
 
 -- 2. Fact Table (The "Scene" where the actor plays different roles)
 CREATE TABLE Fact_Sales (
